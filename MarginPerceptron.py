@@ -21,23 +21,68 @@ class MarginPerceptron:
       return self.b
 
   def dot_product(self, vec1: list, vec2: list) -> float:
-    """Compute the dot product result of two vectors."""
+    """
+      Compute the dot product result of two vectors.
+
+      Args:
+        vec1, vec2: Two vectors in list style to be dotted.
+
+      Return:
+        The dot product result of two vectors.
+    """
     return sum(v1 * v2 for v1, v2 in zip(vec1, vec2))
 
   def scalar_multiply(self, scalar: float, vec: list) -> list:
-    """Multiply each element of a vector by a scalar."""
+    """
+      Multiply each element of a vector by a scalar.
+
+      Args:
+        scalar: The number used to multiply with the vector.
+        vec: The vector to be scalared.
+
+      Returns:
+        The multiplied vector.
+    """
     return [scalar * v for v in vec]
 
   def vector_add(self, vec1: list, vec2: list) -> list:
-    """Add two vectors element-wise."""
+    """
+      Add two vectors element-wise.
+
+      Args:
+        vec1, vec2: Two vectors to be added together element by element.
+      
+      Returns:
+        Vector result of addition execution.
+    """
     return [v1 + v2 for v1, v2 in zip(vec1, vec2)]
+  
+  def normalize(self, x: list) -> list:
+    """
+      Normalizes a vector to have unit length.
+
+      Args:
+        x (list): The input vector to normalize.
+        
+      Returns:
+        list: The normalized vector with unit length.
+      """
+    norm = sum(i**2 for i in x) ** 0.5
+    return [i / norm for i in x] if norm != 0 else x
 
   def train(self, data: list) -> None:
+    """
+      Train the margin perceptron model.
+
+      Args:
+        data: Dataset, including features in the front dims element and label as the final element.
+    """
     for epoch in range(self.epochs):
       updates = 0
       for point in data:
         x = point[:-1]  # Features
         y = point[-1]   # Label
+        x = self.normalize(x)
         margin = y * (self.dot_product(self.w, x) + self.b)
                 
         # If margin is less than the threshold, update weights and bias
@@ -51,6 +96,15 @@ class MarginPerceptron:
         print(f"Converged after {epoch+1} epochs.")
         break
 
-  def calculate_margin(self, data: list) -> float:
-    margins = [point[-1] * (self.dot_product(self.w, point[:-1]) + self.b) for point in data]
+  def calculate_margin(self, data: list[list]) -> float:
+    """
+      Calculate the margin of the model based on the data.
+
+      Args:
+        data: Dataset, including features in the front dims element and label as the final element.
+      
+      Return:
+        The margin(minimum) of the model on the dataset.
+    """
+    margins = [line[-1] * (self.dot_product(self.w, self.normalize(line[:-1])) + self.b) for line in data]
     return min(margins)
