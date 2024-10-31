@@ -1,24 +1,21 @@
+import math
+
 class MarginPerceptron:
   """
     This class is designed for implementing the margin perceptron algorithm
     using the dataset given by the project of CMSC5724 Project 2 Margin Perceptron.
 
     Attributes:
-			dimension: The dimension for each data point in the dataset.
-      margin_threshold: The minimum margin required for correctly classified points. 
-      epochs: The maximum number of training iterations over the dataset. The training may stop earlier than epoch.
+			dataIntro: The introduction of the dataset will be given to.
+      dataset: The dataset for training.
   """
-  def __init__(self, dimension: int = 2, margin_threshold: float = 1.0, epochs: int =10):
-    self.w = [0.0] * int(dimension)  # Initialize weights as a list of zeros
-    self.b = 0.0  # Initialize bias to zero
-    self.margin_threshold = margin_threshold
-    self.epochs = epochs
+  def __init__(self, dataIntro: list, dataset: list[list]):
+    self.dim, self.pts, self.radius = tuple(dataIntro)
+    self.dataset = dataset
+    self.w = [0.0] * int(self.dim)
 
-  def get_params(self, type: str) -> list | float:
-    if(type == "weight" or type == "w"):
-      return self.w
-    if(type == "bias" or type == "b"):
-      return self.b
+  def get_weights(self) -> list:
+    return self.w
 
   def dot_product(self, vec1: list, vec2: list) -> float:
     """
@@ -57,46 +54,54 @@ class MarginPerceptron:
     """
     return [v1 + v2 for v1, v2 in zip(vec1, vec2)]
   
-  def normalize(self, x: list) -> list:
+  def vector_subtract(self, vec1: list, vec2: list) -> list:
     """
-      Normalizes a vector to have unit length.
+      Substract two vectors element-wise.
 
       Args:
-        x (list): The input vector to normalize.
-        
+        vec1, vec2: Two vectors to be substracted element by element, vec1 - vec2.
+      
       Returns:
-        list: The normalized vector with unit length.
-      """
-    norm = sum(i**2 for i in x) ** 0.5
-    return [i / norm for i in x] if norm != 0 else x
+        Vector result of substraction execution.
+    """
+    return [v1 - v2 for v1, v2 in zip(vec1, vec2)]
 
-  def train(self, data: list) -> None:
+  def train(self) -> None:
     """
       Train the margin perceptron model.
-
-      Args:
-        data: Dataset, including features in the front dims element and label as the final element.
     """
-    for epoch in range(self.epochs):
+    R = max([math.sqrt(sum([element**2 for element in line[:-1]])) for line in self.dataset])
+    gamma_guess = R
+    while True:
       updates = 0
-      for point in data:
-        x = point[:-1]  # Features
-        y = point[-1]   # Label
-        x = self.normalize(x)
-        margin = y * (self.dot_product(self.w, x) + self.b)
-                
-        # If margin is less than the threshold, update weights and bias
-        if margin < self.margin_threshold:
-          self.w = self.vector_add(self.w, self.scalar_multiply(y, x))
-          self.b += y
-          updates += 1
-            
-      # Stop if no updates are made in the current epoch
-      if updates == 0:
-        print(f"Converged after {epoch+1} epochs.")
-        break
+      max_iterations = math.ceil((12 * R**2) / (gamma_guess**2))  # 12R^2 / gamma_guess^2
+      iteration = 0
+      for iter in range(max_iterations):
+        iteration += 1
+        updates = 0
+        for point in self.dataset:
+          x = point[:-1]  # Features
+          y = point[-1]   # Label
+          margin = y * self.dot_product(self.w, x)
+          # If margin is less than gamma_guess, update weights
+          if margin < gamma_guess:
+            if y == 1:
+              print("update, add")
+              self.w = self.vector_add(self.w, x)
+            else:
+              print("update, subtract")
+              self.w = self.vector_subtract(self.w, x)
+            updates += 1
+        print(f"In the iter {iter}/{max_iterations}, executed {updates} updates.")
+        # Self-termination: if no updates, we have converged
+        if updates == 0:
+            print(f"Converged with gamma_guess = {gamma_guess}.")
+            return
+      # Forced-termination: if max iterations reached without convergence, halve gamma_guess
+      print(f"Forced termination with gamma_guess = {gamma_guess}. Reducing gamma_guess and retrying.")
+      gamma_guess /= 2  # Halve gamma_guess as per the algorithm
 
-  def calculate_margin(self, data: list[list]) -> float:
+  def calculate_margin(self) -> float:
     """
       Calculate the margin of the model based on the data.
 
@@ -106,5 +111,5 @@ class MarginPerceptron:
       Return:
         The margin(minimum) of the model on the dataset.
     """
-    margins = [line[-1] * (self.dot_product(self.w, self.normalize(line[:-1])) + self.b) for line in data]
+    margins = [line[-1] * (self.dot_product(self.w, line[:-1])) for line in self.dataset]
     return min(margins)
