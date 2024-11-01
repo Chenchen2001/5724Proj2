@@ -15,16 +15,16 @@ class MarginPerceptron:
         Initialize the MarginPerceptron instance with given parameters.
 
         Args:
-            dimension (int): The dimension of each data point.
-            radius (float): The radius used to calculate the number of epochs.
-            input (list): The input dataset as a list of data points.
-            label (list): The labels for each data point.
+            dimension: The dimension of each data point.
+            radius: The radius used to calculate the number of epochs.
+            input: The input dataset as a list of data points.
+            label: The labels for each data point.
         """
         self.input = input
         self.label = label
         self.dimension = dimension
         self.w = [0.0] * int(dimension)  # Initialize weight vector with zeros
-        self.gamma_guess = radius
+        self.gamma_guess = radius # initial gamma
         self.epochs = self.max_iteration(radius, radius)
 
     def get_weights(self) -> list | float:
@@ -36,13 +36,13 @@ class MarginPerceptron:
         """
         return self.w
 
-    def max_iteration(self, rad, gamma_guess):
+    def max_iteration(self, rad: float, gamma_guess: float) -> int:
         """
         Calculate the maximum number of epochs for training.
 
         Args:
-            rad (float): Radius of the dataset.
-            gamma_guess (float): Initial guess for the margin.
+            rad: Radius of the dataset.
+            gamma_guess: Initial guess for the margin.
 
         Returns:
             The maximum number of training epochs.
@@ -61,6 +61,7 @@ class MarginPerceptron:
             The dot product result of two vectors.
         """
         value = 0
+        assert len(vec1) == len(vec2)
         list_len = len(vec1)
         for i in range(list_len):
             value += float(vec1[i]) * float(vec2[i])
@@ -91,7 +92,7 @@ class MarginPerceptron:
         """
         return [v1 + v2 for v1, v2 in zip(vec1, vec2)]
 
-    def norm(self, x):
+    def norm(self, x: list) -> float:
         """
         Compute the Euclidean norm of a vector.
 

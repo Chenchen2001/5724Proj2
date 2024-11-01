@@ -1,5 +1,4 @@
-
-def readData(file_name):
+def readData(file_name) -> tuple:
   """
     Get and process data from the server named in the url. For CMSC5724 Perceptron Project only.
 
