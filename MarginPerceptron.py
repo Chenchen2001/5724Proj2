@@ -141,7 +141,7 @@ class MarginPerceptron:
         Returns:
             True if training continues, False if no more violation points are found.
         """
-        for i in range(self.epochs):
+        for _ in range(self.epochs):
             violation_point_index = self.iterate()
             if violation_point_index > -1:
                 # Update weight vector with the violation point
@@ -150,7 +150,7 @@ class MarginPerceptron:
                 for j in range(self.dimension):
                     self.w[j] += self.label[violation_point_index] * float(self.input[violation_point_index][j])
                 print("New w: ", self.w)
-                print('\n\n')
+                print("------------------------------------")
             else:
                 return False
             return True
