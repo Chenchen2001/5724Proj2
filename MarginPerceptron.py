@@ -6,20 +6,12 @@ class MarginPerceptron:
     using the dataset given by the project of CMSC5724 Project 2 Margin Perceptron.
 
     Attributes:
-        dimension: The dimension for each data point in the dataset.
-        margin_threshold: The minimum margin required for correctly classified points.
-        epochs: The maximum number of training iterations over the dataset. The training may stop earlier than epoch.
+        dimension: The dimension of each data point.
+        radius: The radius used to calculate the number of epochs.
+        input: The input dataset as a list of data points.
+        label: The labels for each data point.
     """
     def __init__(self, dimension: int, radius: float, input: list, label: list):
-        """
-        Initialize the MarginPerceptron instance with given parameters.
-
-        Args:
-            dimension: The dimension of each data point.
-            radius: The radius used to calculate the number of epochs.
-            input: The input dataset as a list of data points.
-            label: The labels for each data point.
-        """
         self.input = input
         self.label = label
         self.dimension = dimension
