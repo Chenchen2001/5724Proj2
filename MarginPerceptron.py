@@ -1,6 +1,15 @@
 import math
 
 class MarginPerceptron:
+    """
+    This class is designed for implementing the margin perceptron algorithm
+    using the dataset given by the project of CMSC5724 Project 2 Margin Perceptron.
+    Attributes:
+        dimension: The dimension of each data point.
+        radius: The radius used to calculate the number of epochs.
+        input: The input dataset as a list of data points.
+        label: The labels for each data point.
+    """
     def __init__(self, dimension: int, radius: float, input: list, label: list):
         self.input = input
         self.label = label
@@ -11,23 +20,51 @@ class MarginPerceptron:
         self.epochs = self.max_iteration(radius, radius)
 
     def get_weights(self) -> list:
-        """Return the current weight vector."""
+        """
+        Get the current weight vector.
+        Returns:
+            The weight vector as a list of floats.
+        """
         return self.w
 
     def max_iteration(self, rad: float, gamma_guess: float) -> int:
-        """Calculate maximum number of epochs based on the radius and gamma guess."""
+        """
+        Calculate the maximum number of epochs for training.
+        Args:
+            rad: Radius of the dataset.
+            gamma_guess: Initial guess for the margin.
+        Returns:
+            The maximum number of training epochs.
+        """
+
         return math.ceil(12 * (rad ** 2) / (gamma_guess ** 2))
 
     def dot_product(self, vec1: list, vec2: list) -> float:
-        """Compute dot product of two vectors."""
+        """
+        Compute the dot product result of two vectors.
+        Args:
+            vec1, vec2: Two vectors in list style to be dotted.
+        Return:
+            The dot product result of two vectors.
+        """
         return sum(float(v1) * float(v2) for v1, v2 in zip(vec1, vec2))
 
     def norm(self, x: list) -> float:
-        """Compute Euclidean norm of a vector."""
+        """
+        Compute the Euclidean norm of a vector.
+        Args:
+            x: The vector to calculate the norm for.
+        Returns:
+            The Euclidean norm of the vector.
+        """
         return math.sqrt(sum(i**2 for i in x))
 
     def iterate(self):
-        """Find a violation point in the dataset."""
+        """
+        Iterate over the dataset to find a violation point (a point that is misclassified or violates the margin).
+        Returns:
+            The index of the first violation point found, or -2 if no violation point is found.
+        """
         for i, point in enumerate(self.input):
             point_label = self.label[i]
             dot_product = self.dot_product(self.w, point)
@@ -43,12 +80,23 @@ class MarginPerceptron:
         return -1  # No violation point found
 
     def update_weights(self, index: int):
-        """Update the weight vector based on the violation point."""
+        """
+        Update the weight vector based on the violation point.
+        
+        Returns:
+            None
+        """
+        
         for j in range(self.dimension):
             self.w[j] += self.label[index] * float(self.input[index][j])
 
     def train(self):
-        """Train the perceptron with self-termination and forced-termination mechanisms."""
+        """
+        Train the perceptron using the margin perceptron algorithm.
+
+        Returns:
+            True if training continues, False if no more violation points are found.
+        """
         while True:
             for _ in range(self.epochs):
                 violation_point_index = self.iterate()
@@ -72,7 +120,11 @@ class MarginPerceptron:
             self.epochs = self.max_iteration(self.radius, self.gamma_guess)
 
     def calculate_margin(self):
-        """Calculate the minimum margin of the current weight vector."""
+        """
+        Calculate the margin for the current weight vector.
+        Returns:
+            The minimum margin over all data points.
+        """
         margins = []
         norm_w = self.norm(self.w)
         if norm_w == 0:
