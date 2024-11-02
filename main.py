@@ -12,7 +12,7 @@ for file in dataset:
     input, label, dim, rad = dd.readData(file)
 
     MarginPerceptron = MP(dimension=dim, radius=rad, input=input, label=label)
-    # 训练模型
+    # train the model
     MarginPerceptron.train()
 
     print('============ RESULT ============')
