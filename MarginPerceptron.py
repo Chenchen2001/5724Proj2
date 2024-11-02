@@ -1,169 +1,83 @@
 import math
 
 class MarginPerceptron:
-    """
-    This class is designed for implementing the margin perceptron algorithm
-    using the dataset given by the project of CMSC5724 Project 2 Margin Perceptron.
-
-    Attributes:
-        dimension: The dimension of each data point.
-        radius: The radius used to calculate the number of epochs.
-        input: The input dataset as a list of data points.
-        label: The labels for each data point.
-    """
     def __init__(self, dimension: int, radius: float, input: list, label: list):
         self.input = input
         self.label = label
         self.dimension = dimension
         self.w = [0.0] * int(dimension)  # Initialize weight vector with zeros
-        self.gamma_guess = radius # initial gamma
+        self.gamma_guess = radius  # Initial gamma guess
+        self.radius = radius  # Store initial radius
         self.epochs = self.max_iteration(radius, radius)
 
-    def get_weights(self) -> list | float:
-        """
-        Get the current weight vector.
-
-        Returns:
-            The weight vector as a list of floats.
-        """
+    def get_weights(self) -> list:
+        """Return the current weight vector."""
         return self.w
 
     def max_iteration(self, rad: float, gamma_guess: float) -> int:
-        """
-        Calculate the maximum number of epochs for training.
-
-        Args:
-            rad: Radius of the dataset.
-            gamma_guess: Initial guess for the margin.
-
-        Returns:
-            The maximum number of training epochs.
-        """
-        self.epochs = math.ceil(12 * (rad ** 2) / (gamma_guess ** 2))
-        return self.epochs
+        """Calculate maximum number of epochs based on the radius and gamma guess."""
+        return math.ceil(12 * (rad ** 2) / (gamma_guess ** 2))
 
     def dot_product(self, vec1: list, vec2: list) -> float:
-        """
-        Compute the dot product result of two vectors.
-
-        Args:
-            vec1, vec2: Two vectors in list style to be dotted.
-
-        Return:
-            The dot product result of two vectors.
-        """
-        value = 0
-        assert len(vec1) == len(vec2)
-        list_len = len(vec1)
-        for i in range(list_len):
-            value += float(vec1[i]) * float(vec2[i])
-        return value
-
-    def scalar_multiply(self, scalar: float, vec: list) -> list:
-        """
-        Multiply each element of a vector by a scalar.
-
-        Args:
-            scalar: The number used to multiply with the vector.
-            vec: The vector to be scalared.
-
-        Returns:
-            The multiplied vector.
-        """
-        return [scalar * v for v in vec]
-
-    def vector_add(self, vec1: list, vec2: list) -> list:
-        """
-        Add two vectors element-wise.
-
-        Args:
-            vec1, vec2: Two vectors to be added together element by element.
-
-        Returns:
-            Vector result of addition execution.
-        """
-        return [v1 + v2 for v1, v2 in zip(vec1, vec2)]
+        """Compute dot product of two vectors."""
+        return sum(float(v1) * float(v2) for v1, v2 in zip(vec1, vec2))
 
     def norm(self, x: list) -> float:
-        """
-        Compute the Euclidean norm of a vector.
-
-        Args:
-            x: The vector to calculate the norm for.
-
-        Returns:
-            The Euclidean norm of the vector.
-        """
+        """Compute Euclidean norm of a vector."""
         return math.sqrt(sum(i**2 for i in x))
 
     def iterate(self):
-        """
-        Iterate over the dataset to find a violation point (a point that is misclassified or violates the margin).
-
-        Returns:
-            The index of the first violation point found, or -2 if no violation point is found.
-        """
-        violation_point_index = -2
+        """Find a violation point in the dataset."""
         for i, point in enumerate(self.input):
             point_label = self.label[i]
             dot_product = self.dot_product(self.w, point)
-            # Check if weight vector is still at its initial value (all zeros)
-            if self.w == [0.0] * int(self.dimension):
-                violation_point_index = i
-                break
-            else:
-                # Determine the predicted label based on dot product
-                if dot_product < 0:
-                    predict_label = -1
-                else:
-                    predict_label = 1
-                # Calculate the distance to the margin
-                norm = self.norm(self.w)
-                distance = abs(dot_product) / norm
-                # Check if the point violates the margin or is misclassified
-                if distance < (self.gamma_guess / 2.0) or (predict_label * point_label < 0):
-                    violation_point_index = i
-                    break
-        return violation_point_index
+            # Determine the predicted label
+            predict_label = 1 if dot_product >= 0 else -1
+            # Calculate distance to margin
+            norm_w = self.norm(self.w)
+            distance = abs(dot_product) / norm_w if norm_w != 0 else 0
+
+            # Check for violation: margin or misclassification
+            if (distance < (self.gamma_guess / 2.0)) or (predict_label * point_label < 0):
+                return i  # Violation point index
+        return -1  # No violation point found
+
+    def update_weights(self, index: int):
+        """Update the weight vector based on the violation point."""
+        for j in range(self.dimension):
+            self.w[j] += self.label[index] * float(self.input[index][j])
 
     def train(self):
-        """
-        Train the perceptron using the margin perceptron algorithm.
-
-        Returns:
-            True if training continues, False if no more violation points are found.
-        """
-        for _ in range(self.epochs):
-            violation_point_index = self.iterate()
-            if violation_point_index > -1:
-                # Update weight vector with the violation point
-                print("Find violation point index: ", violation_point_index)
-                print("Current w: ", self.w)
-                for j in range(self.dimension):
-                    self.w[j] += self.label[violation_point_index] * float(self.input[violation_point_index][j])
-                print("New w: ", self.w)
+        """Train the perceptron with self-termination and forced-termination mechanisms."""
+        while True:
+            for _ in range(self.epochs):
+                violation_point_index = self.iterate()
+                # Self-termination: If no violation point is found, training is complete
+                if violation_point_index == -1:
+                    print("Training completed with self-termination.")
+                    return False
+                # Update weights based on the violation point
+                print(f"Violation point index: {violation_point_index}")
+                print(f"Current weights: {self.w}")
+                self.update_weights(violation_point_index)
+                print(f"Updated weights: {self.w}")
                 print("------------------------------------")
-            else:
+
+            # Forced-termination: Reduce gamma_guess and recompute epochs
+            self.gamma_guess /= 2
+            if self.gamma_guess <= 1e-8:
+                print("Gamma guess is too small to continue training.")
                 return False
-            return True
+            print(f"Forced termination: Reducing gamma_guess to {self.gamma_guess} and restarting training.")
+            self.epochs = self.max_iteration(self.radius, self.gamma_guess)
 
     def calculate_margin(self):
-        """
-        Calculate the margin for the current weight vector.
-
-        Returns:
-            The minimum margin over all data points.
-        """
+        """Calculate the minimum margin of the current weight vector."""
         margins = []
+        norm_w = self.norm(self.w)
+        if norm_w == 0:
+            return 0.0  # Avoid division by zero
         for i, point in enumerate(self.input):
-            dot_product = self.dot_product(self.w, point)
-            norm_w = self.norm(self.w)
-            if norm_w == 0:
-                continue
-            margin = (dot_product * self.label[i]) / norm_w
+            margin = (self.dot_product(self.w, point) * self.label[i]) / norm_w
             margins.append(margin)
-
-        if margins:
-            return min(margins)
-        else:
-            return 0.0
+        return min(margins) if margins else 0.0

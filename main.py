@@ -10,16 +10,11 @@ res_margin = []
 for file in dataset:
     print(f'============ TRAINING ON {file.split("/")[1].split(".")[0]} ============')
     input, label, dim, rad = dd.readData(file)
-    # print(input, label, dim, rad)
+
     MarginPerceptron = MP(dimension=dim, radius=rad, input=input, label=label)
-    while MarginPerceptron.train():
-        MarginPerceptron.gamma_guess /= 2.0
-        # print(MarginPerceptron.gamma_guess)
-        MarginPerceptron.epochs = MarginPerceptron.max_iteration(rad, MarginPerceptron.gamma_guess)
-        # print(MarginPerceptron.epochs)
-        if MarginPerceptron.gamma_guess <= 1e-8:
-            print("Gamma guess is too small to calculate")
-            break
+    # 训练模型
+    MarginPerceptron.train()
+
     print('============ RESULT ============')
     print("After training, gamma_guess is ", MarginPerceptron.gamma_guess)
     res_gamma.append(MarginPerceptron.gamma_guess)
